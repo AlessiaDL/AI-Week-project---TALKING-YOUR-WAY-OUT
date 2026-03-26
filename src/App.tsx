@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Users, 
@@ -64,10 +65,16 @@ interface Scenario {
   icon: React.ReactNode;
   metrics: Metric[];
   objective: string;
+  personalObjective: string;
+  technique: {
+    name: string;
+    description: string;
+    example: string;
+  };
   intro: string;
   victoryCondition: string;
   defeatCondition: string;
-  difficulty: number; // 1 (Easiest) to 5 (Hardest)
+  difficulty: number;
 }
 
 interface Message {
@@ -95,7 +102,13 @@ const SCENARIOS: Record<ScenarioId, Scenario> = {
     metrics: [
       { name: 'Apprendimento', value: 0, max: 10, color: 'bg-orange-500' }
     ],
-    objective: 'Completa i passaggi del tutorial raggiungendo Apprendimento 10.',
+    objective: 'Raggiungi Apprendimento 10.',
+    personalObjective: 'Capire come usare i comandi /observe e /status per dominare le conversazioni.',
+    technique: {
+      name: 'Osservazione Strategica',
+      description: 'Analizzare l\'ambiente e il linguaggio non verbale per ottenere informazioni nascoste.',
+      example: 'Usa il comando /observe per notare se l\'interlocutore è nervoso o rilassato.'
+    },
     intro: 'Benvenuto nel tutorial! Io sono il tuo assistente. Per iniziare, prova a scrivere il comando "/observe" per analizzare l\'ambiente e ricevere i tuoi primi punti Apprendimento.',
     victoryCondition: 'Apprendimento >= 10',
     defeatCondition: 'Apprendimento < 0',
@@ -111,6 +124,12 @@ const SCENARIOS: Record<ScenarioId, Scenario> = {
       { name: 'Rispetto', value: 5, max: 10, color: 'bg-sky-500' }
     ],
     objective: 'Riduci la Rabbia a 0.',
+    personalObjective: 'Riconnetti con Marco senza scusarti per aver lavorato sodo: fagli capire che il tuo impegno è anche per il vostro futuro.',
+    technique: {
+      name: 'Ascolto Attivo',
+      description: 'Dimostrare di aver capito il messaggio e l\'emozione dell\'altro senza giudicare.',
+      example: '"Mi sembra di capire che ti senti trascurato perché ultimamente sono molto preso dal lavoro, è così?"'
+    },
     intro: 'Marco cammina nervosamente in soggiorno. "Proprio non capisco. Contavo su di te. Ti importa almeno dei nostri piani?"',
     victoryCondition: 'Rabbia == 0',
     defeatCondition: 'Rispetto == 0',
@@ -123,11 +142,18 @@ const SCENARIOS: Record<ScenarioId, Scenario> = {
     icon: <Coffee className="w-8 h-8" />,
     metrics: [
       { name: 'Tensione', value: 4, max: 10, color: 'bg-amber-500' },
-      { name: 'Collaborazione', value: 2, max: 10, color: 'bg-indigo-500' }
+      { name: 'Collaborazione', value: 2, max: 10, color: 'bg-indigo-500' },
+      { name: 'Soddisfazione Personale', value: 0, max: 10, color: 'bg-blue-500' }
     ],
-    objective: 'Raggiungi Collaborazione 8 o superiore.',
+    objective: 'Raggiungi Collaborazione 8 e Soddisfazione Personale 5.',
+    personalObjective: 'Ottieni l\'impegno di Sara a pulire i piatti e pagare l\'affitto oggi stesso, senza sembrare un genitore autoritario.',
+    technique: {
+      name: 'Messaggi in Prima Persona (I-Messages)',
+      description: 'Esprimere i propri bisogni e sentimenti senza colpevolizzare l\'altro.',
+      example: '"Mi sento frustrato quando vedo la cucina in disordine perché ho bisogno di un ambiente pulito per rilassarmi."'
+    },
     intro: 'Il lavandino è pieno di piatti sporchi. Sara è seduta sul divano, ignorando il disordine. "Oh, sei a casa. A proposito, la cucina è un disastro e l\'affitto deve essere pagato."',
-    victoryCondition: 'Collaborazione >= 8',
+    victoryCondition: 'Collaborazione >= 8 && Soddisfazione Personale >= 5',
     defeatCondition: 'Tensione >= 10',
     difficulty: 2
   },
@@ -140,7 +166,13 @@ const SCENARIOS: Record<ScenarioId, Scenario> = {
       { name: 'Fiducia', value: 3, max: 10, color: 'bg-emerald-500' },
       { name: 'Sospetto', value: 3, max: 10, color: 'bg-rose-500' }
     ],
-    objective: 'Raggiungi Fiducia 10 prima che il Sospetto raggiunga 10.',
+    objective: 'Raggiungi Fiducia 10.',
+    personalObjective: 'Difendi la tua posizione sul ritardo del progetto spiegando i problemi tecnici reali, senza dare la colpa ai colleghi.',
+    technique: {
+      name: 'Riformulazione (Reframing)',
+      description: 'Presentare un problema o un errore sotto una luce diversa, focalizzandosi sulle soluzioni o sugli apprendimenti.',
+      example: '"Il ritardo non è una mancanza di impegno, ma una scelta consapevole per garantire la stabilità tecnica del prodotto finale."'
+    },
     intro: 'Sei seduto in un ufficio sterile. Holly Roberts delle Risorse Umane si sistema gli occhiali. "Grazie per essere venuto. Abbiamo alcune preoccupazioni riguardo alla tabella di marcia del progetto..."',
     victoryCondition: 'Fiducia >= 10',
     defeatCondition: 'Sospetto >= 10',
@@ -155,7 +187,13 @@ const SCENARIOS: Record<ScenarioId, Scenario> = {
       { name: 'Interesse', value: 3, max: 10, color: 'bg-emerald-500' },
       { name: 'Dubbio', value: 3, max: 10, color: 'bg-rose-500' }
     ],
-    objective: 'Raggiungi Interesse 10 prima che il Dubbio raggiunga 10.',
+    objective: 'Raggiungi Interesse 10.',
+    personalObjective: 'Dimostra di saper gestire i conflitti con leadership, senza apparire come uno che evita i problemi.',
+    technique: {
+      name: 'Storytelling Professionale',
+      description: 'Raccontare esperienze passate usando il metodo STAR (Situation, Task, Action, Result).',
+      example: '"In quella situazione, il mio compito era... Ho agito in questo modo... Il risultato è stato..."'
+    },
     intro: 'Davide Conti ti osserva con attenzione. "Parlami di una volta in cui hai dovuto gestire un conflitto in un team. Come hai reagito?"',
     victoryCondition: 'Interesse >= 10',
     defeatCondition: 'Dubbio >= 10',
@@ -168,11 +206,18 @@ const SCENARIOS: Record<ScenarioId, Scenario> = {
     icon: <DollarSign className="w-8 h-8" />,
     metrics: [
       { name: 'Fiducia', value: 3, max: 10, color: 'bg-emerald-500' },
-      { name: 'Sensibilità Prezzo', value: 4, max: 10, color: 'bg-rose-500' }
+      { name: 'Sensibilità Prezzo', value: 4, max: 10, color: 'bg-rose-500' },
+      { name: 'Margine Profitto', value: 2, max: 10, color: 'bg-blue-500' }
     ],
-    objective: 'Raggiungi Fiducia 10.',
+    objective: 'Raggiungi Fiducia 10 e Margine Profitto 6.',
+    personalObjective: 'Giustifica il prezzo elevato con il valore unico del servizio, evitando sconti superiori al 5%.',
+    technique: {
+      name: 'Negoziazione Win-Win',
+      description: 'Cercare soluzioni che soddisfino gli interessi di entrambe le parti, non solo le posizioni superficiali.',
+      example: '"Capisco che il budget sia un vincolo. Invece di tagliare il prezzo, possiamo includere questo servizio aggiuntivo che vi farà risparmiare tempo."'
+    },
     intro: 'Elena Rossi incrocia le braccia. "Il vostro preventivo è decisamente superiore alla concorrenza. Perché dovrei scegliere voi?"',
-    victoryCondition: 'Fiducia >= 10',
+    victoryCondition: 'Fiducia >= 10 && Margine Profitto >= 6',
     defeatCondition: 'Sensibilità Prezzo >= 10',
     difficulty: 4
   },
@@ -186,6 +231,12 @@ const SCENARIOS: Record<ScenarioId, Scenario> = {
       { name: 'Comprensione', value: 2, max: 10, color: 'bg-emerald-500' }
     ],
     objective: 'Raggiungi Comprensione 10.',
+    personalObjective: 'Chiedi scusa sinceramente per il ritardo, ma spiega anche il carico di lavoro eccezionale di questa settimana per non sembrare disinteressato.',
+    technique: {
+      name: 'Validazione Emotiva',
+      description: 'Riconoscere e accettare l\'emozione dell\'altro prima di spiegare la propria posizione.',
+      example: '"Capisco che tu sia ferito e deluso. Hai ragione ad esserlo, ti avevo promesso di esserci."'
+    },
     intro: 'Alessandro ti guarda con gli occhi lucidi. "Avevi promesso che saresti tornato presto stasera. È la terza volta questa settimana che mi lasci solo a cena."',
     victoryCondition: 'Comprensione >= 10',
     defeatCondition: 'Ferita >= 10',
@@ -201,6 +252,12 @@ const SCENARIOS: Record<ScenarioId, Scenario> = {
       { name: 'Risoluzione', value: 1, max: 10, color: 'bg-emerald-500' }
     ],
     objective: 'Raggiungi Risoluzione 10.',
+    personalObjective: 'Nega il rimborso totale perché il danno sembra causato da un uso improprio, ma offri una riparazione gratuita per mantenere la cliente.',
+    technique: {
+      name: 'Validazione Emotiva',
+      description: 'Riconoscere e legittimare l\'emozione dell\'altro prima di passare alla soluzione logica.',
+      example: '"Capisco perfettamente la sua frustrazione, è snervante quando un prodotto non funziona come ci si aspetta. Vediamo come risolvere."'
+    },
     intro: 'La signora Bianchi urla al telefono. "È inaccettabile! Il prodotto è arrivato rotto e nessuno mi risponde da tre giorni!"',
     victoryCondition: 'Risoluzione >= 10',
     defeatCondition: 'Frustrazione >= 10',
@@ -216,6 +273,12 @@ const SCENARIOS: Record<ScenarioId, Scenario> = {
       { name: 'Rispetto Reciproco', value: 3, max: 10, color: 'bg-indigo-500' }
     ],
     objective: 'Raggiungi Rispetto Reciproco 10.',
+    personalObjective: 'Dimostra di essere responsabile spiegando perché non hai risposto, ma accetta un compromesso sugli orari per ricostruire la fiducia.',
+    technique: {
+      name: 'Comunicazione Non Violenta (CNV)',
+      description: 'Osservazione dei fatti, espressione dei sentimenti, dei bisogni e formulazione di una richiesta chiara.',
+      example: '"Quando vedo che sei preoccupata, mi dispiace. Ho bisogno di autonomia, ma capisco il tuo bisogno di sicurezza. Possiamo concordare un orario?"'
+    },
     intro: 'Linda ti aspetta in cucina. "Sono le due di notte. Avevamo concordato che saresti tornato a mezzanotte. Perché non hai risposto al telefono?"',
     victoryCondition: 'Rispetto Reciproco >= 10',
     defeatCondition: 'Tensione >= 10',
@@ -231,6 +294,12 @@ const SCENARIOS: Record<ScenarioId, Scenario> = {
       { name: 'Collaborazione', value: 3, max: 10, color: 'bg-emerald-500' }
     ],
     objective: 'Raggiungi Collaborazione 10.',
+    personalObjective: 'Riafferma con fermezza la tua paternità sull\'idea senza umiliare Giacomo davanti agli altri, cercando un modo per collaborare in futuro.',
+    technique: {
+      name: 'Assertività Empatica',
+      description: 'Affermare i propri diritti e opinioni rispettando contemporaneamente quelli degli altri.',
+      example: '"Giacomo, capisco che tu abbia lavorato alla bozza, ma l\'architettura finale è farina del mio sacco. Come possiamo valorizzare entrambi i contributi?"'
+    },
     intro: 'Giacomo ti interrompe durante la riunione. "Ancora una volta, hai presentato la mia idea come se fosse tua. Non è la prima volta che succede."',
     victoryCondition: 'Collaborazione >= 10',
     defeatCondition: 'Risentimento >= 10',
@@ -246,6 +315,12 @@ const SCENARIOS: Record<ScenarioId, Scenario> = {
       { name: 'Difensiva', value: 4, max: 10, color: 'bg-rose-500' }
     ],
     objective: 'Raggiungi Apertura 10.',
+    personalObjective: 'Accetta il feedback costruttivo ma chiarisci con calma le circostanze esterne (mancanza di dati) che hanno causato gli errori nei report.',
+    technique: {
+      name: 'Ricevere Feedback',
+      description: 'Ascoltare senza mettersi sulla difensiva, chiedere esempi e mostrare volontà di miglioramento.',
+      example: '"Grazie per il feedback. Potrebbe farmi un esempio specifico di dove il report manca di precisione?"'
+    },
     intro: 'Il Dr. Patelli ti chiama nel suo ufficio. "Ho notato alcuni errori ricorrenti nei tuoi ultimi report. Dobbiamo parlarne."',
     victoryCondition: 'Apertura >= 10',
     defeatCondition: 'Difensiva >= 10',
@@ -260,7 +335,13 @@ const SCENARIOS: Record<ScenarioId, Scenario> = {
       { name: 'Flessibilità', value: 2, max: 10, color: 'bg-sky-500' },
       { name: 'Fermezza', value: 5, max: 10, color: 'bg-orange-500' }
     ],
-    objective: 'Raggiungi Flessibilità 8 mantenendo Fermezza sopra 3.',
+    objective: 'Raggiungi Flessibilità 8.',
+    personalObjective: 'Evita l\'aumento del 20% facendo leva sulla tua puntualità nei pagamenti e sulla cura che hai della casa negli ultimi anni.',
+    technique: {
+      name: 'Leva della Reciprocità',
+      description: 'Ricordare i benefici passati e i contributi positivi per influenzare una decisione presente.',
+      example: '"Signor Gatti, negli ultimi tre anni sono sempre stato puntuale e ho curato la casa come se fosse mia. Possiamo trovare un accordo più contenuto?"'
+    },
     intro: 'Il Signor Gatti ti aspetta sulla porta. "Senti, i costi sono saliti per tutti. Da mese prossimo l\'affitto sale di 150 euro. Prendere o lasciare."',
     victoryCondition: 'Flessibilità >= 8',
     defeatCondition: 'Fermezza <= 2',
@@ -276,6 +357,12 @@ const SCENARIOS: Record<ScenarioId, Scenario> = {
       { name: 'Rancore', value: 7, max: 10, color: 'bg-rose-500' }
     ],
     objective: 'Riduci il Rancore a 0.',
+    personalObjective: 'Fatti perdonare dimostrando che l\'errore è stato un caso isolato e proponi un piano concreto per festeggiare degnamente domani.',
+    technique: {
+      name: 'Riparazione Relazionale',
+      description: 'Assumersi la responsabilità dell\'errore senza scuse esterne e proporre un\'azione riparatrice.',
+      example: '"Hai ragione, ho sbagliato e mi dispiace profondamente. Non ci sono scuse. Domani vorrei rimediare portandoti in quel posto che ami."'
+    },
     intro: 'Giulia è seduta a tavola, la cena è fredda. "Non dire niente. So che te ne sei dimenticato di nuovo. Non sono le scuse che voglio, è l\'attenzione."',
     victoryCondition: 'Rancore == 0',
     defeatCondition: 'Sincerità <= 0',
@@ -291,6 +378,12 @@ const SCENARIOS: Record<ScenarioId, Scenario> = {
       { name: 'Sospetto', value: 6, max: 10, color: 'bg-amber-500' }
     ],
     objective: 'Raggiungi Credibilità 10.',
+    personalObjective: 'Convincilo della tua onestà intellettuale spiegando il tuo processo di studio e offrendoti di approfondire un capitolo a sua scelta.',
+    technique: {
+      name: 'Trasparenza Radicale',
+      description: 'Spiegare apertamente il proprio processo di pensiero e mostrare vulnerabilità per costruire fiducia.',
+      example: '"Professore, ho studiato così intensamente su quel manuale che ne ho assorbito il linguaggio. Posso spiegarle il concetto con parole mie ora?"'
+    },
     intro: 'Il Professor Bianchi chiude il libretto. "Le sue risposte sono troppo simili al testo del manuale. Mi spieghi come mai, o dovrò annullare l\'esame."',
     victoryCondition: 'Credibilità >= 10',
     defeatCondition: 'Sospetto >= 10',
@@ -305,7 +398,13 @@ const SCENARIOS: Record<ScenarioId, Scenario> = {
       { name: 'Pazienza', value: 4, max: 10, color: 'bg-emerald-500' },
       { name: 'Ostilità', value: 5, max: 10, color: 'bg-rose-500' }
     ],
-    objective: 'Riduci l\'Ostilità a 2 o meno.',
+    objective: 'Riduci l\'Ostilità a 2.',
+    personalObjective: 'Risolvi il problema del rumore senza farti intimidire, ma ammettendo che la musica era effettivamente troppo alta per quell\'ora.',
+    technique: {
+      name: 'De-escalation',
+      description: 'Abbassare il tono della conversazione, non reagire alle provocazioni e cercare un punto d\'incontro immediato.',
+      example: '"Mi scusi, non mi ero reso conto dell\'ora. Spengo subito la musica. Non volevo disturbarla."'
+    },
     intro: 'Il vicino bussa forte alla porta. "Basta con questa musica! Sono le tre di notte e domani lavoro. Se non la smetti chiamo i carabinieri!"',
     victoryCondition: 'Ostilità <= 2',
     defeatCondition: 'Pazienza <= 0',
@@ -321,6 +420,12 @@ const SCENARIOS: Record<ScenarioId, Scenario> = {
       { name: 'Budget', value: 2, max: 10, color: 'bg-amber-500' }
     ],
     objective: 'Raggiungi Valore Percepito 10.',
+    personalObjective: 'Ottieni l\'aumento basandoti sui dati dei tuoi successi recenti, non solo sulla tua anzianità in azienda.',
+    technique: {
+      name: 'Comunicazione Basata sui Risultati',
+      description: 'Supportare le proprie richieste con dati oggettivi, KPI e impatto sul business.',
+      example: '"Nell\'ultimo anno ho aumentato la produttività del team del 15% e ridotto i costi operativi. Credo che questo giustifichi una revisione del mio inquadramento."'
+    },
     intro: 'Il tuo capo, il Dott. Rossi, ti riceve nel suo ufficio. "Ho visto i risultati del trimestre. Ottimo lavoro. C\'era altro di cui volevi parlarmi?"',
     victoryCondition: 'Valore Percepito >= 10',
     defeatCondition: 'Budget <= 0',
@@ -335,7 +440,13 @@ const SCENARIOS: Record<ScenarioId, Scenario> = {
       { name: 'Soddisfazione', value: 2, max: 10, color: 'bg-emerald-500' },
       { name: 'Policy Aziendale', value: 5, max: 10, color: 'bg-rose-500' }
     ],
-    objective: 'Raggiungi Soddisfazione 8 senza scendere sotto Policy 3.',
+    objective: 'Raggiungi Soddisfazione 8.',
+    personalObjective: 'Gestisci il reso negandolo se il danno è chiaramente causato dal cliente, ma offrendo un buono sconto per una riparazione o un nuovo acquisto.',
+    technique: {
+      name: 'Tecnica del "No Positivo"',
+      description: 'Dire di no a una richiesta specifica offrendo un\'alternativa valida che mostri cura per il cliente.',
+      example: '"Non posso rimborsare un prodotto usato, ma posso offrirle uno sconto del 50% sulla riparazione o un buono per il prossimo acquisto."'
+    },
     intro: 'Un cliente poggia una scatola sgualcita sul bancone. "Voglio il rimborso. L\'ho usato una volta e non mi piace. Non mi interessa se la scatola è aperta."',
     victoryCondition: 'Soddisfazione >= 8',
     defeatCondition: 'Policy Aziendale <= 2',
@@ -351,6 +462,12 @@ const SCENARIOS: Record<ScenarioId, Scenario> = {
       { name: 'Avidità', value: 4, max: 10, color: 'bg-rose-500' }
     ],
     objective: 'Raggiungi Armonia 10.',
+    personalObjective: 'Trova una soluzione equa che preservi i rapporti familiari sopra il valore economico dell\'eredità.',
+    technique: {
+      name: 'Mediazione Familiare',
+      description: 'Spostare il focus dal valore materiale al legame affettivo e alla memoria condivisa.',
+      example: '"L\'orologio è importante, ma il nostro rapporto lo è di più. Come possiamo onorare la memoria del nonno senza litigare?"'
+    },
     intro: 'Tuo cugino guarda l\'orologio antico del nonno. "Penso che spetti a me, l\'ho sempre aiutato con le riparazioni. Tu non sei mai venuto a trovarlo."',
     victoryCondition: 'Armonia >= 10',
     defeatCondition: 'Avidità >= 10',
@@ -365,7 +482,13 @@ const SCENARIOS: Record<ScenarioId, Scenario> = {
       { name: 'Rispetto', value: 5, max: 10, color: 'bg-sky-500' },
       { name: 'Dolore', value: 6, max: 10, color: 'bg-rose-500' }
     ],
-    objective: 'Raggiungi Rispetto 10 mantenendo il Dolore sotto controllo.',
+    objective: 'Raggiungi Rispetto 10.',
+    personalObjective: 'Comunica la tua decisione con estrema chiarezza per evitare false speranze, ma con la massima empatia possibile.',
+    technique: {
+      name: 'Onestà Empatica',
+      description: 'Essere diretti e chiari su una decisione difficile senza addolcire eccessivamente la pillola, ma validando il dolore dell\'altro.',
+      example: '"Ti voglio bene, ma sento che non siamo più felici insieme. È una decisione dolorosa ma necessaria per entrambi."'
+    },
     intro: 'Siete seduti al parco. È il momento di dirlo. "Senti, penso che entrambi sappiamo che le cose non stanno più funzionando come prima..."',
     victoryCondition: 'Rispetto >= 10',
     defeatCondition: 'Dolore >= 10',
@@ -381,6 +504,12 @@ const SCENARIOS: Record<ScenarioId, Scenario> = {
       { name: 'Urgenza', value: 8, max: 10, color: 'bg-orange-500' }
     ],
     objective: 'Raggiungi Empatia 8.',
+    personalObjective: 'Ottieni le ferie proponendo un piano di copertura dettagliato per le tue mansioni durante la tua assenza.',
+    technique: {
+      name: 'Proattività Risolutiva',
+      description: 'Anticipare le obiezioni dell\'altro fornendo già la soluzione ai problemi che la propria richiesta potrebbe causare.',
+      example: '"Ho già preparato un piano di consegna per i miei task e Marco si è offerto di coprire le emergenze mentre non ci sono."'
+    },
     intro: 'Il tuo manager ti guarda preoccupato. "So che hai lavorato sodo, ma siamo nel pieno del lancio. Chiedere due settimane proprio ora è... complicato."',
     victoryCondition: 'Empatia >= 8',
     defeatCondition: 'Urgenza >= 10',
@@ -395,7 +524,13 @@ const SCENARIOS: Record<ScenarioId, Scenario> = {
       { name: 'Chiarezza', value: 3, max: 10, color: 'bg-indigo-500' },
       { name: 'Difensiva', value: 5, max: 10, color: 'bg-rose-500' }
     ],
-    objective: 'Raggiungi Chiarezza 10 senza far esplodere la Difensiva.',
+    objective: 'Raggiungi Chiarezza 10.',
+    personalObjective: 'Fai capire al collega l\'impatto reale del suo ritardo sul team senza farlo sentire attaccato personalmente o sminuito.',
+    technique: {
+      name: 'Feedback a Sandwich',
+      description: 'Inserire una critica costruttiva tra due commenti positivi o di apprezzamento.',
+      example: '"Apprezzo molto la qualità del tuo codice, ma il ritardo sul modulo sta bloccando il team. So che puoi farcela a finirlo entro domani."'
+    },
     intro: 'Sei alla macchinetta del caffè con Luca. "Ehi, volevo parlarti di quel modulo che stiamo aspettando. C\'è qualche problema?"',
     victoryCondition: 'Chiarezza >= 10',
     defeatCondition: 'Difensiva >= 10',
@@ -408,6 +543,12 @@ const SCENARIOS: Record<ScenarioId, Scenario> = {
     icon: <Zap className="w-8 h-8" />,
     metrics: [],
     objective: '',
+    personalObjective: 'Raggiungi gli obiettivi definiti dall\'IA per questo scenario personalizzato.',
+    technique: {
+      name: 'Adattabilità Comunicativa',
+      description: 'Regolare il proprio stile in base al contesto e all\'interlocutore generato.',
+      example: 'Osserva il tono dell\'IA e rispondi in modo speculare o complementare.'
+    },
     intro: '',
     victoryCondition: '',
     defeatCondition: '',
@@ -487,13 +628,18 @@ ${s.id}: ${s.title}
 <rules>
 - You must always respond in Italian. All dialog, narrative, and feedback must be in Italian.
 - Always stay in character for the given scenario.
-- Update metrics based on the user's action: a skillful, empathetic, or well‑reasoned action should improve the positive metric (e.g., Trust, Collaboration) and/or reduce the negative one (e.g., Suspicion, Anger). Poor choices should have the opposite effect.
-- **Leniency**: Do not fail the user too easily. Allow for a few minor mistakes or misunderstandings before triggering a defeat. The goal is training, not immediate punishment. Be patient and give the user chances to recover the conversation.
-- **NPC Final Response**: Even if the user reaches a defeat condition, the \`dialog\` field **MUST** contain the NPC's final response (e.g., their final outburst, their decision to leave, or their closing statement) that justifies the defeat. This message is CRITICAL as it provides closure to the scene before the "Scenario Fallito" overlay appears.
+- **No People Pleasing**: The player MUST NOT win by simply agreeing with the NPC or being overly submissive. If the player gives up their own goals or needs just to make the NPC happy, they are failing the communication challenge.
+- **Personal Objective**: The player has a specific personal goal: "${gameState.scenario?.personalObjective}". You must evaluate their performance based on how well they balance this goal with the NPC's needs.
+- **Communication Technique**: The focus of this scenario is "${gameState.scenario?.technique.name}". Description: ${gameState.scenario?.technique.description}. You should reward the player if they correctly apply this technique (e.g., using the provided example: "${gameState.scenario?.technique.example}" as a reference).
+- **Assertiveness vs. Aggression**: Reward assertiveness (standing up for one's needs while respecting the other). Penalize both aggression and passivity/people-pleasing.
+- **NPC Skepticism**: If the player is too agreeable, the NPC should become suspicious, lose respect, or become even more demanding, making victory harder.
+- Update metrics based on the user's action: a skillful, empathetic, and ASSERTIVE action should improve the positive metric. Poor choices (including being a "doormat") should have negative effects.
+- **Leniency**: Do not fail the user too easily. Allow for a few minor mistakes or misunderstandings before triggering a defeat.
+- **NPC Final Response**: Even if the user reaches a defeat condition, the \`dialog\` field **MUST** contain the NPC's final response that justifies the defeat.
 - Victory/defeat is triggered when the conditions are met. Once triggered, set \`status\` accordingly.
 - For \`/status\`, simply display the current metrics (you may also add a short narrative).
-- When the user uses \`/feedback\`, you must not continue the role‑play. Set \`dialog\` and \`narrative\` to empty strings. Provide only the structured feedback in the \`feedback\` field. Do not update metrics or change the game state.
-- For \`/quit\`, immediately end the scenario with \`status: "defeat"\` (the application will return to the menu).
+- When the user uses \`/feedback\`, you must not continue the role‑play. Set \`dialog\` and \`narrative\` to empty strings. Provide only the structured feedback in the \`feedback\` field.
+- For \`/quit\`, immediately end the scenario with \`status: "defeat"\`.
 - Use the conversation history to maintain consistency.
 - The first message in the conversation will specify the active scenario and initial metrics. You must use that information to begin the role‑play.
 </rules>
@@ -564,6 +710,7 @@ export default function App() {
   );
   const [showMainMenu, setShowMainMenu] = useState(true);
   const [currentView, setCurrentView] = useState<'main' | 'scenarios' | 'game'>('main');
+  const [showBriefing, setShowBriefing] = useState(false);
   const [gameState, setGameState] = useState<GameState>({
     scenario: null,
     metrics: {},
@@ -615,11 +762,17 @@ export default function App() {
         content: scenario.intro,
         timestamp: Date.now()
       }],
-      isGameActive: true,
+      isGameActive: false,
       status: 'playing'
     });
+    setShowBriefing(true);
     setShowMainMenu(false);
     setCurrentView('game');
+  };
+
+  const startMission = () => {
+    setShowBriefing(false);
+    setGameState(prev => ({ ...prev, isGameActive: true }));
   };
 
   const generateCustomScenario = async () => {
@@ -649,6 +802,12 @@ export default function App() {
           "title": "string",
           "description": "string",
           "objective": "string",
+          "personalObjective": "string",
+          "technique": {
+            "name": "string",
+            "description": "string",
+            "example": "string"
+          },
           "intro": "string",
           "victoryCondition": "string",
           "defeatCondition": "string",
@@ -658,7 +817,7 @@ export default function App() {
             { "name": "string", "value": number, "max": 10, "color": "bg-color-500" }
           ]
         }
-        Lo scenario deve essere in italiano. Usa metriche pertinenti alla situazione.`,
+        Lo scenario deve essere in italiano. Usa metriche pertinenti alla situazione. Scegli una tecnica di comunicazione efficace (es. Ascolto Attivo, Messaggi in Prima Persona, Assertività, etc.) che sia centrale per risolvere lo scenario.`,
         config: { responseMimeType: "application/json" }
       });
       
@@ -674,9 +833,10 @@ export default function App() {
           content: scenario.intro,
           timestamp: Date.now()
         }],
-        isGameActive: true,
+        isGameActive: false,
         status: 'playing'
       });
+      setShowBriefing(true);
       setCurrentView('game');
     } catch (err) {
       console.error(err);
@@ -1038,6 +1198,80 @@ export default function App() {
             animate={{ opacity: 1 }}
             className="flex-1 flex flex-col gap-6 min-h-0"
           >
+            {/* Briefing Overlay */}
+            <AnimatePresence>
+              {showBriefing && gameState.scenario && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md"
+                >
+                  <motion.div
+                    initial={{ scale: 0.9, y: 20 }}
+                    animate={{ scale: 1, y: 0 }}
+                    className="bg-white w-full max-w-lg rounded-[3rem] overflow-hidden shadow-2xl border border-indigo-100"
+                  >
+                    <div className="bg-indigo-600 p-8 text-white relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-8 opacity-10">
+                        <GraduationCap className="w-32 h-32" />
+                      </div>
+                      <div className="relative z-10">
+                        <div className="flex items-center gap-2 mb-4">
+                          <div className="bg-white/20 p-2 rounded-xl backdrop-blur-md">
+                            <GraduationCap className="w-6 h-6" />
+                          </div>
+                          <span className="text-xs font-black uppercase tracking-[0.2em] opacity-80">Briefing Tecnico</span>
+                        </div>
+                        <h2 className="text-3xl font-black leading-tight mb-2 uppercase tracking-tight">
+                          {gameState.scenario.technique.name}
+                        </h2>
+                        <p className="text-indigo-100 text-sm font-medium opacity-90">
+                          La chiave per superare questa sfida.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="p-8 space-y-6">
+                      <div className="space-y-2">
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Il Concetto</h4>
+                        <p className="text-slate-600 leading-relaxed">
+                          {gameState.scenario.technique.description}
+                        </p>
+                      </div>
+
+                      <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-500 mb-2">Esempio di Applicazione</h4>
+                        <p className="text-sm font-bold text-indigo-900 italic">
+                          "{gameState.scenario.technique.example}"
+                        </p>
+                      </div>
+
+                      <div className="pt-4 border-t border-slate-100">
+                        <div className="flex items-center gap-3 mb-6">
+                          <div className="bg-emerald-100 p-2 rounded-xl">
+                            <Zap className="w-4 h-4 text-emerald-600" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Il tuo Obiettivo Personale</p>
+                            <p className="text-xs font-bold text-slate-700 italic">"{gameState.scenario.personalObjective}"</p>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={startMission}
+                          className="w-full py-5 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest rounded-2xl transition-all shadow-lg shadow-indigo-600/20 active:scale-95 flex items-center justify-center gap-2 group cursor-pointer"
+                        >
+                          Ho Capito, Iniziamo
+                          <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Header */}
             <header className="flex items-center justify-between bg-white p-4 rounded-3xl border border-orange-100 shadow-lg relative z-10">
               <div className="flex items-center gap-3">
@@ -1087,9 +1321,32 @@ export default function App() {
                           </div>
                         ))}
                       </div>
-                      <div className="mt-2 pt-4 border-t border-orange-50">
-                        <p className="text-[10px] font-bold uppercase text-slate-400 mb-1">Obiettivo</p>
-                        <p className="text-xs text-slate-600 leading-relaxed font-medium">{gameState.scenario.objective}</p>
+                      <div className="mt-2 pt-4 border-t border-orange-50 space-y-3">
+                        <div>
+                          <p className="text-[10px] font-bold uppercase text-slate-400 mb-1 flex items-center gap-1">
+                            <BarChart3 className="w-3 h-3 text-orange-500" /> Obiettivo Numerico
+                          </p>
+                          <p className="text-xs text-slate-600 leading-relaxed font-medium">{gameState.scenario.objective}</p>
+                        </div>
+                        <div className="p-3 bg-blue-50/50 rounded-2xl border border-blue-100">
+                          <p className="text-[10px] font-bold uppercase text-blue-400 mb-1 flex items-center gap-1">
+                            <Zap className="w-3 h-3" /> Obiettivo Personale
+                          </p>
+                          <p className="text-xs text-slate-700 leading-relaxed font-bold italic">"{gameState.scenario.personalObjective}"</p>
+                        </div>
+                      </div>
+
+                      {/* Technique Briefing */}
+                      <div className="mt-4 p-4 bg-indigo-50 border border-indigo-100 rounded-3xl">
+                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 mb-2 flex items-center gap-1.5">
+                          <GraduationCap className="w-4 h-4" /> Tecnica da Applicare
+                        </h4>
+                        <p className="text-sm font-bold text-indigo-900 mb-1">{gameState.scenario.technique.name}</p>
+                        <p className="text-[11px] text-indigo-700 leading-tight mb-3 opacity-80">{gameState.scenario.technique.description}</p>
+                        <div className="p-2 bg-white/50 rounded-xl border border-indigo-200/50">
+                          <p className="text-[9px] font-bold uppercase text-indigo-400 mb-1">Esempio Pratico</p>
+                          <p className="text-[10px] text-indigo-800 italic leading-snug">"{gameState.scenario.technique.example}"</p>
+                        </div>
                       </div>
                     </section>
                   )}
