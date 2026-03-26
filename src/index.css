@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+  body {
+    @apply bg-orange-50 text-slate-800 font-sans antialiased;
+  }
+}
+
+.chat-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-scrollbar::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.chat-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-orange-200 rounded-full;
+}
+
+.chat-scrollbar::-webkit-scrollbar-thumb:hover {
+  @apply bg-orange-300;
+}
