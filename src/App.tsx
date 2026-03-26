@@ -559,7 +559,9 @@ Current metrics: ${JSON.stringify(gameState.metrics)}
 // --- Main Component ---
 
 export default function App() {
-  const [apiKey] = useState<string>(process.env.GEMINI_API_KEY || "");
+  const [apiKey] = useState<string>(
+    import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || ""
+  );
   const [showMainMenu, setShowMainMenu] = useState(true);
   const [currentView, setCurrentView] = useState<'main' | 'scenarios' | 'game'>('main');
   const [gameState, setGameState] = useState<GameState>({
