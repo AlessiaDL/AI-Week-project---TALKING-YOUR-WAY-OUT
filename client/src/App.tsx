@@ -51,6 +51,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
+import { callGemini } from './gemini'; // Importa la logica dell'AI
 
 // --- Types & Constants ---
 
@@ -975,20 +976,19 @@ export default function App() {
     }));
 
     try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          gameState: { ...gameState, history: newHistory }, 
-          userMessage: text,
-          personality: gameState.activeVariant?.personality || 'assertive'
-        })
-      });
+      // 1. Recuperiamo la chiave API dalle variabili di Vite
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
-      if (!response.ok) throw new Error("Errore durante la comunicazione con l'IA");
-      
-      const result = await response.json();
-      
+      // 2. Chiamiamo direttamente la funzione nel file gemini.ts (che hai spostato in client/src)
+      const result = await callGemini(
+        apiKey, 
+        { ...gameState, history: newHistory }, 
+        text, 
+        gameState.activeVariant?.personality || 'assertive',
+        gameState.mode
+      );
+
+      // 3. Creiamo il messaggio dell'NPC usando i dati ricevuti direttamente
       const npcMsg: Message = {
         role: result.feedback ? 'gm' : 'npc',
         content: result.feedback || result.dialog,
@@ -1003,6 +1003,7 @@ export default function App() {
       }
 
       const isVictory = result.status === 'victory';
+      
       if (isVictory && gameState.scenario) {
         const completionKey = gameState.activeVariant 
           ? `${gameState.scenario.id}:${gameState.activeVariant.personality}`
@@ -1013,7 +1014,6 @@ export default function App() {
           return [...prev, completionKey];
         });
 
-        // Unlock technique
         const techniqueName = gameState.scenario.technique.name;
         setUnlockedTechniques(prev => {
           if (prev.includes(techniqueName)) return prev;
@@ -1027,8 +1027,10 @@ export default function App() {
         status: isVictory ? 'won' : result.status === 'defeat' ? 'lost' : 'playing',
         history: [...newHistory, npcMsg]
       }));
+
     } catch (err) {
-      setError("Errore durante la comunicazione con l'IA. Controlla la tua API Key.");
+      console.error(err);
+      setError("Errore durante la comunicazione con l'IA. Controlla la tua API Key su Vercel.");
       setGameState(prev => ({
         ...prev,
         history: [...newHistory, {
