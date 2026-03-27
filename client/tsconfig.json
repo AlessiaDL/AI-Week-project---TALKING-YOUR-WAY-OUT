@@ -15,12 +15,15 @@
     "moduleDetection": "force",
     "allowJs": true,
     "jsx": "react-jsx",
+    "baseUrl": ".",
     "paths": {
       "@/*": [
-        "./client/*"
+        "./src/*" 
       ]
     },
     "allowImportingTsExtensions": true,
-    "noEmit": true
-  }
-} 
+    "noEmit": true,
+    "strict": false 
+  },
+  "include": ["src"]
+}
