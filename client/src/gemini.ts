@@ -1,6 +1,6 @@
-import { GoogleGenAI, Type, ThinkingLevel } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// --- Types & Constants (Duplicated from client for now, or move to a shared file) ---
+// --- Types & Constants ---
 
 export type ScenarioId = 'hr' | 'friend' | 'roommate' | 'tutorial' | 'interview' | 'client' | 'partner' | 'customer' | 'parent' | 'team' | 'rent' | 'apology' | 'exam' | 'neighbor' | 'promotion' | 'customer_service' | 'inheritance' | 'breakup' | 'vacation' | 'peer_feedback';
 
@@ -60,7 +60,6 @@ const MAIL_SCENARIOS: Record<string, any> = {
 };
 
 const SCENARIOS: Record<string, any> = {
-  // We'll only need the metadata for the prompt
   tutorial: { title: 'Tutorial Interattivo', description: 'Impara le basi del gioco in un ambiente protetto.', metrics: [{ name: 'Apprendimento', max: 10 }], victoryCondition: 'Apprendimento >= 10', defeatCondition: 'Apprendimento < 0' },
   friend: { title: 'Conflitto con Marco', description: 'Marco si sente trascurato. Le emozioni sono forti.', metrics: [{ name: 'Rabbia', max: 10 }, { name: 'Rispetto', max: 10 }], victoryCondition: 'Rabbia == 0', defeatCondition: 'Rispetto == 0' },
   roommate: { title: 'Disputa con Sara', description: 'Sara è frustrata per le faccende domestiche.', metrics: [{ name: 'Tensione', max: 10 }, { name: 'Collaborazione', max: 10 }, { name: 'Soddisfazione Personale', max: 10 }], victoryCondition: 'Collaborazione >= 8 && Soddisfazione Personale >= 5', defeatCondition: 'Tensione >= 10' },
@@ -90,7 +89,8 @@ export const callGemini = async (
   personality: string = 'assertive',
   mode: string = 'chat'
 ) => {
-  const ai = new GoogleGenAI({ apiKey });
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   const isMailMode = mode === 'mail';
 
@@ -212,73 +212,57 @@ Current metrics: ${JSON.stringify(gameState.metrics)}
     parts: [{ text: msg.content + (msg.narrative ? ` [Narrativa: ${msg.narrative}]` : '') }]
   }));
 
-  const metricsSchema: Record<string, any> = {};
-  gameState.scenario?.metrics.forEach(m => {
-    metricsSchema[m.name] = { type: Type.NUMBER };
-  });
-
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+  const response = await model.generateContent({
     contents: [
       ...historyContext,
       { role: 'user', parts: [{ text: userMessage }] }
     ],
-    config: {
-      systemInstruction: { parts: [{ text: systemInstruction }] },
-      thinkingConfig: {
-        thinkingLevel: ThinkingLevel.LOW,
-      },
+    generationConfig: {
       responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          dialog: { type: Type.STRING },
-          narrative: { type: Type.STRING },
-          metrics: { 
-            type: Type.OBJECT, 
-            properties: metricsSchema,
-            required: Object.keys(metricsSchema)
-          },
-          status: { type: Type.STRING, enum: ["victory", "defeat", "playing"] },
-          feedback: { type: Type.STRING },
-          score: { type: Type.NUMBER, description: "Valutazione della risposta da 1 a 10 (solo per modalità MAIL)" }
-        },
-        required: ["dialog", "narrative", "metrics", "status"]
-      }
-    }
+    },
+    systemInstruction: systemInstruction
   });
 
-  const result = JSON.parse(response.text || "{}");
+  const responseText = response.response.text();
+  const result = JSON.parse(responseText || "{}");
   if (result.status === "playing") result.status = null;
   return result;
 };
 
 export const generateCustomScenario = async (apiKey: string, prompt: string) => {
-  const ai = new GoogleGenAI({ apiKey });
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: `Crea uno scenario di addestramento alla comunicazione basato su questo prompt: "${prompt}". 
-    Ritorna SOLO un oggetto JSON con questa struttura:
-    {
-      "id": "custom",
-      "title": "string",
-      "description": "string",
-      "objective": "string",
-      "personalObjective": "string",
-      "technique": {
-        "name": "string",
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+  const response = await model.generateContent({
+    contents: [{ 
+      role: 'user', 
+      parts: [{ text: `Crea uno scenario di addestramento alla comunicazione basato su questo prompt: "${prompt}". 
+      Ritorna SOLO un oggetto JSON con questa struttura:
+      {
+        "id": "custom",
+        "title": "string",
         "description": "string",
-        "example": "string"
-      },
-      "intro": "string",
-      "victoryCondition": "string",
-      "defeatCondition": "string",
-      "metrics": [
-        { "name": "string", "value": number, "max": number, "color": "string" }
-      ],
-      "difficulty": number
-    }`
+        "objective": "string",
+        "personalObjective": "string",
+        "technique": {
+          "name": "string",
+          "description": "string",
+          "example": "string"
+        },
+        "intro": "string",
+        "victoryCondition": "string",
+        "defeatCondition": "string",
+        "metrics": [
+          { "name": "string", "value": number, "max": number, "color": "string" }
+        ],
+        "difficulty": number
+      }` }] 
+    }],
+    generationConfig: {
+      responseMimeType: "application/json",
+    }
   });
 
-  return JSON.parse(response.text || "{}");
+  const responseText = response.response.text();
+  return JSON.parse(responseText || "{}");
 };
